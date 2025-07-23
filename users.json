@@ -1,0 +1,26 @@
+[
+  {
+    "username": "test",
+    "password": "$2b$10$L/2omPLQ9Y9PbVmMnIJmGu5oyj7m7PZzr/.ry0CrSnfDt9shq59Xi",
+    "wallet": {
+      "address": "wallet_062968739b167b88",
+      "balance": 28112.78819021265
+    }
+  },
+  {
+    "username": "buyaka",
+    "password": "$2b$10$GKPlb6Ec15RDpfma30JBx.SFmKffsnS4LAYAqrGgF0jd8guOAWkue",
+    "wallet": {
+      "address": "wallet_54a2dba932a4934d",
+      "balance": 682.6019999999996
+    }
+  },
+  {
+    "username": "123456",
+    "password": "$2b$10$Az7Sqs0UiMRF17wbgRbwHOWm1n9KxAX51NQzywqQT540WtUJiSpNi",
+    "wallet": {
+      "address": "wallet_d9cb146598b058ca",
+      "balance": 0.7384328358207313
+    }
+  }
+]
