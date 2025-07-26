@@ -27,7 +27,6 @@ function DiceGameContainer() {
       body: JSON.stringify({
         betAmount,
         target: value[0],
-        username: user.username,
       }),
     });
     const data = await res.json();

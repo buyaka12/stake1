@@ -22,5 +22,13 @@
       "address": "wallet_d9cb146598b058ca",
       "balance": 0.7384328358207313
     }
+  },
+  {
+    "username": "caleb",
+    "password": "$2b$10$XL8Sgh7UvtVNszIMRJTKY.I5pDGFCY1B6sqH.3Tn2vGKragX4ghwK",
+    "wallet": {
+      "address": "wallet_ab39822978da3317",
+      "balance": 1000
+    }
   }
 ]

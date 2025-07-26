@@ -1,29 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
-import fs from 'fs';
-import path from 'path';
+import {fetchUser} from "@/app/api/auth/userFunctions";
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_key';
-const USERS_PATH = path.resolve(process.cwd(), 'users.json');
 
 export async function GET(req: NextRequest) {
-  const auth = req.headers.get('authorization');
-  if (!auth || !auth.startsWith('Bearer ')) {
-    return NextResponse.json({ error: 'No token provided' }, { status: 401 });
+  const authHeader = req.headers.get('authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return NextResponse.json({ error: 'Authorization token required' }, { status: 401 });
   }
-  const token = auth.slice(7);
+  const token = authHeader.slice(7);
+
   try {
     const payload = jwt.verify(token, JWT_SECRET) as { username: string };
-    let users = [];
-    if (fs.existsSync(USERS_PATH)) {
-      users = JSON.parse(fs.readFileSync(USERS_PATH, 'utf-8'));
-    }
-    const user = users.find((u: any) => u.username === payload.username);
+    const user = await fetchUser(payload.username);
+
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
-    return NextResponse.json({ username: user.username, wallet: user.wallet });
-  } catch (e) {
-    return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+
+    // Create a JSON response
+    const response = NextResponse.json({
+      username: user.username,
+      wallet: user.wallet,
+      email: user.email,
+    });
+
+    // Set the cookie on the response
+    response.cookies.set('auth', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV !== 'development',
+      sameSite: 'strict',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7,
+    });
+
+    // Return the response with the cookie
+    return response;
+
+  } catch (error) {
+    return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
   }
-} 
+}

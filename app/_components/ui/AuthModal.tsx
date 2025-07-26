@@ -25,7 +25,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
     setError('');
     setSuccess('');
     try {
-      const body: any = { username, password };
+      const body: any = { username, password, email };
       if (mode === 'register') body.email = email;
       const res = await fetch(`/api/auth/${mode}`, {
         method: 'POST',
