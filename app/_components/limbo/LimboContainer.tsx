@@ -25,7 +25,6 @@ export default function LimboContainer() {
       body: JSON.stringify({
         betAmount: amount,
         targetMultiplier: multiplier,
-        username: user.username,
       }),
     });
     const data = await res.json();

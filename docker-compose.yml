@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+
+  mongo:
+    image: mongo:latest
+    platform: linux/arm64
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: user
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - ./mongo-data:/data/db
+    ports:
+      - "27018:27017"

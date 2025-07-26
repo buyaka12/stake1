@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import {fetchUser, updateBalance} from "@/app/api/auth/userFunctions";
 
-const USERS_PATH = path.resolve(process.cwd(), 'users.json');
 const HOUSE_EDGE = 0.01;
 
 type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH';
@@ -56,26 +54,28 @@ const binPayouts: Record<RowCount, Record<RiskLevel, number[]>> = {
   },
 };
 
-function getUser(username: string) {
-  const users = JSON.parse(fs.readFileSync(USERS_PATH, 'utf8'));
-  return users.find((u: any) => u.username === username);
-}
-
-function updateUserBalance(username: string, newBalance: number) {
-  const users = JSON.parse(fs.readFileSync(USERS_PATH, 'utf8'));
-  const user = users.find((u: any) => u.username === username);
-  if (user) user.wallet.balance = newBalance;
-  fs.writeFileSync(USERS_PATH, JSON.stringify(users, null, 2));
-}
 
 export async function POST(req: NextRequest) {
-  const { betAmount, rowCount, riskLevel, username } = await req.json();
+
+  const userPayloadString = req.headers.get('x-user-payload');
+  if (!userPayloadString) {
+    return NextResponse.json({ error: 'User payload not found in request' }, { status: 401 });
+  }
+  const { username } = JSON.parse(userPayloadString);
+
+  const { betAmount, rowCount, riskLevel } = await req.json();
   if (!betAmount || !rowCount || !riskLevel || !username) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
-  const user = getUser(username);
+
+  const user = await fetchUser(username);
   if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
   if (user.wallet.balance < betAmount) return NextResponse.json({ error: 'Insufficient balance' }, { status: 400 });
+
+
+  if (betAmount <= 0) {
+    return NextResponse.json({ error: 'Cannot make a bet below 0' }, { status: 400 })
+  }
 
   // Simulate ball drop
   const bins = binPayouts[rowCount as RowCount]?.[riskLevel as RiskLevel];
@@ -84,6 +84,6 @@ export async function POST(req: NextRequest) {
   const multiplier = bins[binIndex] * (1 - HOUSE_EDGE);
   const payout = betAmount * multiplier;
   const newBalance = user.wallet.balance - betAmount + payout;
-  updateUserBalance(username, newBalance);
+  await updateBalance(username, newBalance);
   return NextResponse.json({ binIndex, payout, newBalance });
 } 

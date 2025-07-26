@@ -1,36 +1,37 @@
 // app/api/plinko/bet/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import fs from 'fs'
-import path from 'path'
-
-const USERS_PATH = path.resolve(process.cwd(), 'users.json')
-
-function loadUsers() {
-  return JSON.parse(fs.readFileSync(USERS_PATH, 'utf8'))
-}
-function saveUsers(u: any[]) {
-  fs.writeFileSync(USERS_PATH, JSON.stringify(u, null, 2))
-}
-function getUser(users: any[], username: string) {
-  return users.find(u => u.username === username)
-}
+import {fetchUser, updateBalance} from "@/app/api/auth/userFunctions";
 
 export async function POST(req: NextRequest) {
-  const { username, betAmount } = await req.json()
+
+
+  const userPayloadString = req.headers.get('x-user-payload');
+  if (!userPayloadString) {
+    return NextResponse.json({ error: 'User payload not found in request' }, { status: 401 });
+  }
+  const { username } = JSON.parse(userPayloadString);
+
+  const { betAmount } = await req.json()
   if (typeof username !== 'string' || typeof betAmount !== 'number') {
     return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
   }
 
-  const users = loadUsers()
-  const user = getUser(users, username)
+  if (betAmount <= 0) {
+    return NextResponse.json({ error: 'Cannot make a bet below 0' }, { status: 400 })
+  }
+
+  const user = await fetchUser(username);
+  if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+
   if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+
   if (user.wallet.balance < betAmount) {
     return NextResponse.json({ error: 'Insufficient balance' }, { status: 400 })
   }
 
   // Deduct the bet
-  user.wallet.balance -= betAmount
-  saveUsers(users)
+  const newBalance = user.wallet.balance -= betAmount
+  await updateBalance(username, newBalance);
 
   return NextResponse.json({ newBalance: user.wallet.balance })
 }

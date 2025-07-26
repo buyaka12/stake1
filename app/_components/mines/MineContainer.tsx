@@ -47,7 +47,6 @@ export default function MineContainer() {
         numberOfMines,
         revealedTiles: tiles,
         minePositions,
-        username: user.username,
       }),
     });
     const data = await res.json();
